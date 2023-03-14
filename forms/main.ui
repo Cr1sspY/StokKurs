@@ -29,7 +29,7 @@
       <string notr="true">font: 12pt &quot;Comic Sans MS&quot;;</string>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="page">
       <property name="styleSheet">
@@ -53,7 +53,7 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_13">
            <item>
-            <layout class="QVBoxLayout" name="verticalLayout_12" stretch="0,0,0,0,5">
+            <layout class="QVBoxLayout" name="verticalLayout_12" stretch="0,0,0,0,0,5">
              <item>
               <widget class="QLabel" name="label_13">
                <property name="styleSheet">
@@ -99,6 +99,19 @@
                 </widget>
                </item>
               </layout>
+             </item>
+             <item>
+              <widget class="QLabel" name="lbl_name">
+               <property name="styleSheet">
+                <string notr="true">background-color: rgb(249, 174, 255);</string>
+               </property>
+               <property name="text">
+                <string>TextLabel</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
              </item>
              <item alignment="Qt::AlignHCenter">
               <widget class="QLabel" name="label">
@@ -391,7 +404,7 @@
           <enum>QTabWidget::North</enum>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tab_7">
           <property name="styleSheet">
@@ -402,7 +415,7 @@
           </attribute>
           <layout class="QVBoxLayout" name="verticalLayout_15">
            <item>
-            <layout class="QVBoxLayout" name="verticalLayout_14" stretch="0,0,0,0,5">
+            <layout class="QVBoxLayout" name="verticalLayout_14" stretch="0,0,0,0,0,5">
              <item>
               <widget class="QLabel" name="label_14">
                <property name="styleSheet">
@@ -448,6 +461,19 @@
                 </widget>
                </item>
               </layout>
+             </item>
+             <item>
+              <widget class="QLabel" name="lbl_name_2">
+               <property name="styleSheet">
+                <string notr="true">background-color: rgb(249, 174, 255);</string>
+               </property>
+               <property name="text">
+                <string>TextLabel</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
              </item>
              <item alignment="Qt::AlignHCenter">
               <widget class="QLabel" name="label_2">

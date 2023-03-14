@@ -6,7 +6,7 @@ from PyQt5 import uic
 from PyQt5.QtGui import QIcon
 from PyQt5.QtSql import QSqlDatabase, QSqlQueryModel
 from PyQt5.QtWidgets import *
-from PyQt5.QtWidgets import QLineEdit
+from PyQt5.QtWidgets import QLineEdit, QComboBox
 
 
 class Auth(QMainWindow):
@@ -119,14 +119,20 @@ class Window(QDialog):
 
         self.build_combobox_client()
         self.build_combobox_service()
-        # self.build_serv_cost()
+        self.build_serv_cost()
         self.build_combobox_kompl()
 
+        service = self.ui.usluga_box.currentText()
+        self.ui.usl_cost.setText(str(self.DB.get_serv_c(service)))
+        service_cost = self.ui.usl_cost.text()
+
         if post == 'Кассир':
-            self.ui.lbl_role.setText('Роль: ' + post + '\n' + 'ФИО: ' + fullName)
+            self.ui.lbl_role.setText('Роль: ' + post)
+            self.ui.lbl_name.setText(fullName)
             self.ui.stackedWidget.setCurrentIndex(0)
         elif post == 'Кладовщик':
-            self.ui.lbl_role2.setText('Роль: ' + post + '\n' + 'ФИО: ' + fullName)
+            self.ui.lbl_role2.setText('Роль: ' + post)
+            self.ui.lbl_name_2.setText(fullName)
             self.ui.stackedWidget.setCurrentIndex(1)
             # self.update_table_history()
 
@@ -163,21 +169,25 @@ class Window(QDialog):
     def add_order(self):
         client = self.ui.client_box.currentText()
         service = self.ui.usluga_box.currentText()
-        self.ui.usl_cost.setText(self.DB.get_serv_c(service))
+        self.ui.usl_cost.setText(str(self.DB.get_serv_c(service)))
         service_cost = self.ui.usl_cost.text()
         kompl = self.ui.kompl_box.currentText()
+        self.ui.kompl_cost.setText(str(self.DB.get_kompl_c(kompl)))
         kompl_cost = self.ui.kompl_cost.text()
-        summary = self.ui.summary.text()
+        summary = service_cost + kompl_cost
         info = self.ui.info.text()
+        worker = self.ui.lbl_name.text()
 
-        self.DB.add_order(service, client, service_cost, kompl, kompl_cost, summary, info)
+        self.DB.add_order(service, client, service_cost, kompl, kompl_cost, summary, info, worker)
 
     def add_wh(self):
         type = self.ui.edit_type.text()
         name = self.ui.edit_name.text()
         count = self.ui.edit_count.value()
         cost = self.ui.edit_cost.value()
-        self.DB.add_wh(type, name, count, cost)
+        worker = self.ui.lbl_name_2.text()
+
+        self.DB.add_wh(type, name, count, cost, worker)
 
     def orders(self):
         orders = Order()
@@ -211,7 +221,9 @@ class Window(QDialog):
 
     def build_serv_cost(self):
         self.usl_cost.clear()
-        self.ui.usl_cost.setText(self.DB.get_serv_c())
+        self.ui.usl_cost.setText(str(self.DB.get_serv_c(self.ui.usluga_box.currentText())))
+        self.usl_cost.update()
+        print()
 
     def build_combobox_kompl(self):
         kompls = self.DB.get_kompl()
@@ -219,6 +231,11 @@ class Window(QDialog):
         if self.kompl_box is not None:
             self.kompl_box.addItems(kompls)
 
+    def build_kompl_cost(self):
+        self.kompl_cost.clear()
+        self.ui.kompl_cost.setText(str(self.DB.get_kompl_c(self.ui.kompl_box.currentText())))
+        self.kompl_cost.update()
+        print()
 
 class DataBase():
     def __init__(self):
@@ -249,27 +266,27 @@ class DataBase():
         else:
             return False
 
-    def add_order(self, service, client, serv_cost, kompl, kompl_cost, summ, info):
+    def add_order(self, service, client, serv_cost, kompl, kompl_cost, summ, info,worker):
         now = datetime.now()
         times = now.strftime("%H:%M")
         date = now.strftime("%d.%m.20%y")
         id = 1
         try:
             cur = self.con.cursor()
-            cur.execute("""INSERT INTO order1 VALUES (NULL,?,?,?,?,?,?,?,?,?,?)""", (date, times, client, service,
+            cur.execute("""INSERT INTO order1 VALUES (NULL,?,?,?,?,?,?,?,?,?,?,?)""", (date, times, client, service,
                                                                                     serv_cost, kompl, kompl_cost, summ,
-                                                                                    info, "Новый заказ"))
+                                                                                    info, "Новый заказ", worker))
             self.con.commit()
             cur.close()
         except sqlite3.Error as error:
             print("Ошибка при работе с SQLite", error)
 
-    def add_wh(self, type, name, count, cost):
+    def add_wh(self, type, name, count, cost, worker):
         now = datetime.now()
         id = 1
         try:
             cur = self.con.cursor()
-            cur.execute("""INSERT INTO warehouse VALUES (NULL,?,?,?,?)""", (type, name, count, cost))
+            cur.execute("""INSERT INTO warehouse VALUES (NULL,?,?,?,?,?)""", (type, name, count, cost, worker))
             self.con.commit()
             cur.close()
         except sqlite3.Error as error:
@@ -312,6 +329,14 @@ class DataBase():
         for i in rows:
             kompls.append(str(i)[2:-3])
         return kompls
+
+    def get_kompl_c(self, kompl):
+        cur = self.con.cursor()
+        cur.execute(f'SELECT Стоимость FROM warehouse WHERE Наименование="{kompl}"')
+        kompl_c = cur.fetchall()
+        cur.close()
+        print(kompl_c)
+        return kompl_c
 
 
 if __name__ == '__main__':

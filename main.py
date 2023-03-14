@@ -19,7 +19,8 @@ class Auth(QMainWindow):
         self.btn_enter.clicked.connect(self.auth)
         self.btn_pas.clicked.connect(self.hide_pas)
         self.hide_password = True
-    
+        worker = self.auth
+
     def hide_pas(self):
         self.password = self.ui.edit_password
         if self.hide_password:
@@ -41,6 +42,8 @@ class Auth(QMainWindow):
             main_win.setWindowTitle('СТОК')
 
             main_win.exec()
+
+            return full_name
         else:
             self.error.setStyleSheet("color:red")  # Изменение цвета шрифта на зелёный
             self.error.setText('Ошибка входа')
@@ -156,17 +159,17 @@ class Window(QDialog):
         self.ui.tableWidget.horizontalHeader().setStretchLastSection(True)
         self.ui.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
 
-    def add_order(self, fullName):
-        client = self.DB.get_client_name(self.ui.client_box.currentText())
-        service = self.DB.get_service_name(self.ui.usluga_box.currentText())
+    def add_order(self):
+        client = self.ui.client_box.currentText()
+        service = self.ui.usluga_box.currentText()
+        self.ui.usl_cost.setText(self.DB.get_serv_c(service))
         service_cost = self.ui.usl_cost.text()
-        kompl = self.DB.get_kompl_name(self.ui.kompl_box.currentText())
+        kompl = self.ui.kompl_box.currentText()
         kompl_cost = self.ui.kompl_cost.text()
         summary = self.ui.summary.text()
         info = self.ui.info.text()
-        worker = fullName
 
-        self.DB.add_order(service, client, service_cost, kompl, kompl_cost, summary, info, worker)
+        self.DB.add_order(service, client, service_cost, kompl, kompl_cost, summary, info)
 
     def add_wh(self):
         type = self.ui.edit_type.text()
@@ -241,16 +244,16 @@ class DataBase():
         else:
             return False
 
-    def add_order(self, service, client, serv_cost, kompl, kompl_cost, summ, info, worker):
+    def add_order(self, service, client, serv_cost, kompl, kompl_cost, summ, info):
         now = datetime.now()
         times = now.strftime("%H:%M")
         date = now.strftime("%d.%m.20%y")
         id = 1
         try:
             cur = self.con.cursor()
-            cur.execute("""INSERT INTO order1 VALUES (NULL,?,?,?,?,?,?,?,?,?,?,?)""", (date, times, client, service,
+            cur.execute("""INSERT INTO order1 VALUES (NULL,?,?,?,?,?,?,?,?,?,?)""", (date, times, client, service,
                                                                                     serv_cost, kompl, kompl_cost, summ,
-                                                                                    info, "Новый заказ", worker))
+                                                                                    info, "Новый заказ"))
             self.con.commit()
             cur.close()
         except sqlite3.Error as error:
@@ -277,12 +280,6 @@ class DataBase():
             clients.append(str(i)[2:-3])
         return clients
 
-    def get_client_name(self, name):
-        cursor = self.con.cursor()
-        cursor.execute(f"SELECT `name` FROM client WHERE `name`='{name}'")
-        code = str(cursor.fetchone())
-        return code[1:-2]
-
     def get_service(self):
         services = []
         cursor = self.con.cursor()
@@ -293,11 +290,12 @@ class DataBase():
             services.append(str(i)[2:-3])
         return services
 
-    def get_service_name(self, name):
-        cursor = self.con.cursor()
-        cursor.execute(f"SELECT `Название` FROM usluga WHERE `Название`='{name}'")
-        code = str(cursor.fetchone())
-        return code[1:-2]
+    def get_serv_c(self, service):
+        cur = self.con.cursor()
+        cur.execute(f'SELECT Цена FROM usluga WHERE Название="{service}"')
+        serv_c = cur.fetchall()
+        cur.close()
+        return serv_c
 
     def get_kompl(self):
         kompls = []
@@ -308,12 +306,6 @@ class DataBase():
         for i in rows:
             kompls.append(str(i)[2:-3])
         return kompls
-
-    def get_kompl_name(self, name):
-        cursor = self.con.cursor()
-        cursor.execute(f"SELECT `Наименование` FROM warehouse WHERE `Наименование`='{name}'")
-        code = str(cursor.fetchone())
-        return code[1:-2]
 
 
 if __name__ == '__main__':

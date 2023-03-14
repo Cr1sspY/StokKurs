@@ -119,6 +119,7 @@ class Window(QDialog):
 
         self.build_combobox_client()
         self.build_combobox_service()
+        # self.build_serv_cost()
         self.build_combobox_kompl()
 
         if post == 'Кассир':
@@ -208,6 +209,10 @@ class Window(QDialog):
         if self.usluga_box is not None:
             self.usluga_box.addItems(services)
 
+    def build_serv_cost(self):
+        self.usl_cost.clear()
+        self.ui.usl_cost.setText(self.DB.get_serv_c())
+
     def build_combobox_kompl(self):
         kompls = self.DB.get_kompl()
         self.kompl_box.clear()
@@ -295,6 +300,7 @@ class DataBase():
         cur.execute(f'SELECT Цена FROM usluga WHERE Название="{service}"')
         serv_c = cur.fetchall()
         cur.close()
+        print(serv_c)
         return serv_c
 
     def get_kompl(self):

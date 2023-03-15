@@ -101,6 +101,23 @@ class Service(QDialog):
         self.tableView.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
 
 
+class Info(QDialog):
+    def __init__(self, parent = None):
+        super().__init__(parent)
+        self.ui = uic.loadUi('forms/info.ui', self)
+        self.setWindowIcon(QIcon('logo.ico'))
+
+        self.ui.info_lbl.setText('Заказ оформлен')
+        # if pine == 'order':
+        #     self.ui.info_lbl.setText('Заказ оформлен')
+        # elif pine == 'wh':
+        #     self.ui.info_lbl.setText('Запись добавлена')
+        self.ui.btn_ok.clicked.connect(self.exit)
+
+    def exit(self):
+        self.close()
+
+
 class Window(QDialog):
     def __init__(self, post, fullName, parent = None):
         super().__init__(parent)
@@ -121,10 +138,7 @@ class Window(QDialog):
         self.build_combobox_service()
         self.build_serv_cost()
         self.build_combobox_kompl()
-
-        service = self.ui.usluga_box.currentText()
-        self.ui.usl_cost.setText(str(self.DB.get_serv_c(service)))
-        service_cost = self.ui.usl_cost.text()
+        self.build_kompl_cost()
 
         if post == 'Кассир':
             self.ui.lbl_role.setText('Роль: ' + post)
@@ -135,6 +149,28 @@ class Window(QDialog):
             self.ui.lbl_name_2.setText(fullName)
             self.ui.stackedWidget.setCurrentIndex(1)
             # self.update_table_history()
+
+        self.ui.usluga_box.currentIndexChanged.connect(self.update_serv_cost)
+        self.ui.usluga_box.currentIndexChanged.connect(self.update_sum)
+        self.update_serv_cost()
+        self.ui.kompl_box.currentIndexChanged.connect(self.update_kompl_cost)
+        self.ui.kompl_box.currentIndexChanged.connect(self.update_sum)
+        self.update_kompl_cost()
+        self.update_sum()
+
+    def update_serv_cost(self):
+        service = self.ui.usluga_box.currentText()
+        self.ui.usl_cost.setText(str(self.DB.get_serv_c(service)[0][0]))
+
+    def update_kompl_cost(self):
+        kompl = self.ui.kompl_box.currentText()
+        self.ui.kompl_cost.setText(str(self.DB.get_kompl_c(kompl)[0][0]))
+
+    def update_sum(self):
+        service_cost = self.ui.usl_cost.text()
+        kompl_cost = self.ui.kompl_cost.text()
+        summary = int(service_cost) + int(kompl_cost)
+        self.ui.summary.setText(str(summary))
 
     def exit(self):
         self.close()
@@ -169,16 +205,17 @@ class Window(QDialog):
     def add_order(self):
         client = self.ui.client_box.currentText()
         service = self.ui.usluga_box.currentText()
-        self.ui.usl_cost.setText(str(self.DB.get_serv_c(service)))
         service_cost = self.ui.usl_cost.text()
         kompl = self.ui.kompl_box.currentText()
-        self.ui.kompl_cost.setText(str(self.DB.get_kompl_c(kompl)))
         kompl_cost = self.ui.kompl_cost.text()
-        summary = service_cost + kompl_cost
+        summary = int(service_cost) + int(kompl_cost)
         info = self.ui.info.text()
         worker = self.ui.lbl_name.text()
 
         self.DB.add_order(service, client, service_cost, kompl, kompl_cost, summary, info, worker)
+        # pine = 'order'
+        self.info_window()
+        self.ui.info.setText('')
 
     def add_wh(self):
         type = self.ui.edit_type.text()
@@ -188,6 +225,8 @@ class Window(QDialog):
         worker = self.ui.lbl_name_2.text()
 
         self.DB.add_wh(type, name, count, cost, worker)
+        # pine = 'wh'
+        self.info_window()
 
     def orders(self):
         orders = Order()
@@ -236,6 +275,13 @@ class Window(QDialog):
         self.ui.kompl_cost.setText(str(self.DB.get_kompl_c(self.ui.kompl_box.currentText())))
         self.kompl_cost.update()
         print()
+
+    def info_window(self):
+        info = Info()
+        info.setWindowTitle('Информация')
+
+        info.exec()
+
 
 class DataBase():
     def __init__(self):
@@ -317,7 +363,6 @@ class DataBase():
         cur.execute(f'SELECT Цена FROM usluga WHERE Название="{service}"')
         serv_c = cur.fetchall()
         cur.close()
-        print(serv_c)
         return serv_c
 
     def get_kompl(self):
@@ -335,7 +380,6 @@ class DataBase():
         cur.execute(f'SELECT Стоимость FROM warehouse WHERE Наименование="{kompl}"')
         kompl_c = cur.fetchall()
         cur.close()
-        print(kompl_c)
         return kompl_c
 
 

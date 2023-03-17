@@ -108,10 +108,6 @@ class Info(QDialog):
         self.setWindowIcon(QIcon('logo.ico'))
 
         self.ui.info_lbl.setText('Заказ оформлен')
-        # if pine == 'order':
-        #     self.ui.info_lbl.setText('Заказ оформлен')
-        # elif pine == 'wh':
-        #     self.ui.info_lbl.setText('Запись добавлена')
         self.ui.btn_ok.clicked.connect(self.exit)
 
     def exit(self):
